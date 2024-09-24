@@ -1,0 +1,2 @@
+# Goruntu Isleme Full Tekrar
+ 
