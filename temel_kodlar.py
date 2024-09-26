@@ -403,13 +403,13 @@ plt.figure(), plt.imshow(img_vis)
 
 print(img.shape)
 
-img_hist = cv2.calcHist([img], channels = [0], mask = None, histSize = [256], ranges = [0,256])
+img_hist = cv2.calcHist([img], channels = [0], mask = None, histSize = [256], ranges = [0,256]) # histogram hesapla (mavi)
 print(img_hist.shape)
 plt.figure(), plt.plot(img_hist)
 
-color = ('b','g','r')
+color = ('b','g','r') 
 plt.figure()
-for i, c in enumerate(color):
+for i, c in enumerate(color): #  enumerate() her renk kanalı için döngüye giriyor ve uygun renk koduyla grafiği çiziyor
     hist = cv2.calcHist([img], channels = [i], mask = None, histSize = [256], ranges = [0,256])
     plt.plot(hist, color = c)
     
@@ -419,20 +419,109 @@ plt.figure(), plt.imshow(keddy_vis)
 
 print(keddy.shape)
 
-mask = np.zeros(keddy.shape[:2], np.uint8)
+mask = np.zeros(keddy.shape[:2], np.uint8) # siyah maske oluştur
 plt.figure(), plt.imshow(mask, cmap = "gray")
 
+mask[150:150, 25:100] = 255 # maske üzerine beyaz alan ekle
+plt.figure(), plt.imshow(mask, cmap = "gray")
 
+masked_img_vis = cv2.bitwise_and(keddy_vis, keddy_vis, mask = mask) # maske uygulayarak maske üzerindeki beyaz alanı göster
+plt.figure(), plt.imshow(masked_img_vis, cmap = "gray")
+
+masked_img = cv2.bitwise_and(keddy, keddy, mask = mask) # maskelenmiş görüntünün histogramını hesapla
+masked_img_hist = cv2.calcHist([keddy], channels = [0], mask = mask, histSize = [256], ranges = [0,256])
+plt.figure(), plt.plot(masked_img_hist)
+
+# histogram eşitleme
+# karşıtlık arttırma
+
+img = cv2.imread("silik_resim.jpg",0)
+plt.figure(), plt.imshow(img, cmap = "gray")
+
+img_his = cv2.calcHist([img], channels = [0], mask = None, histSize = [256], ranges = [0,256]) # histogram hesapla, grafiği çiz
+plt.figure(), plt.plot(img_hist)
+
+eq_hist = cv2.equalizeHist(img) # histogram eşitleme
+plt.figure(), plt.imshow(eq_hist, cmap = "gray")
+
+eq_img_his = cv2.calcHist([eq_hist], channels = [0], mask = None, histSize = [256], ranges = [0,256]) # eşitlenmiş görüntünün histogramı
+plt.figure(), plt.plot(eq_img_his)
 # %%
 
 # =============================================================================
 # KENAR ALGILAMA
 # =============================================================================
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+
+img = cv2.imread("london.jpg", 0)
+plt.figure(), plt.imshow(img, cmap = 'gray'), plt.axis("off")
+
+edges = cv2.Canny(img, threshold1 = 0, threshold2 = 255) # kenar tespiti sırasında düşük ve yüksek eşik değerleri
+plt.figure(), plt.imshow(edges, cmap = 'gray'), plt.axis("off")
+
+med_val = np.median(img) # medyan hesaplama (parlaklık düzeyini anlamaya yarar)
+print(med_val)
+
+low = int(max(0, (1 - 0.33)* med_val)) # yeni eşik değerinin hesaplanması
+high = int(min(255, (1 + 0.33)* med_val))
+
+print(low)
+print(high)
+
+edges = cv2.Canny(image = img, threshold1 = low, threshold2 = high) # yeni eşik değeri ile kenar algılama
+plt.figure(), plt.imshow(edges, cmap = 'gray'), plt.axis("off")
+
+# blur
+blurred_img = cv2.blur(img, ksize = (5,5))
+plt.figure(), plt.imshow(blurred_img, cmap = 'gray'), plt.axis("off")
+
+med_val = np.median(img)
+print(med_val)
+
+low = int(max(0, (1 - 0.33) * med_val))
+high = int(min(255, (1 + 0.33) * med_val))
+
+print(low)
+print(high)
+
+edges = cv2.Canny(image = blurred_img, threshold1 = low, threshold2 = high)
+plt.figure(), plt.imshow(edges, cmap = "gray"), plt.axis("off")
 # %%
 
 # =============================================================================
 # KÖŞE ALGILAMA
 # =============================================================================
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+
+img = cv2.imread("7a35d381-fa47-49ab-bd26-5213c6e776bb.webp", 0)
+img = np.float32(img)
+print(img.shape)
+plt.figure(), plt.imshow(img, cmap = 'gray'), plt.axis("off")
+
+# harris corner detection
+dst = cv2.cornerHarris(img, blockSize = 2, ksize = 3, k = 0.04) 
+plt.figure(), plt.imshow(dst, cmap = 'gray'), plt.axis("off")
+
+dst = cv2.dilate(dst, None)
+img[dst > 0.2*dst.max()] = 1
+plt.figure(), plt.imshow(dst, cmap = "gray"), plt.axis("off")
+
+# shi tomasi detection
+img = cv2.imread("7a35d381-fa47-49ab-bd26-5213c6e776bb.webp", 0)
+img = np.float32(img)
+corners = cv2.goodFeaturesToTrack(img, 100, 0.01, 10)
+corners = np.int64(corners)
+
+for i in corners:
+    x,y = i.ravel()
+    cv2.circle(img, (x,y), 3, (125,125,125), cv2.FILLED)
+
+plt.imshow(img)
+plt.axis("off")
 # %%
 
 # =============================================================================
